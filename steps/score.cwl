@@ -23,12 +23,6 @@ requirements:
         args = parser.parse_args()
         score = 1 + 1
         prediction_file_status = "SCORED"
-        
-        syn = syn()
-        status = syn.getSubmissionStatus(args.submissionid)
-        status.score = score
-        status.status = 'SCORED'
-        status = syn.store(status)
 
         result = {'auc': args.submissionfile,
                   'submission_status': prediction_file_status}
