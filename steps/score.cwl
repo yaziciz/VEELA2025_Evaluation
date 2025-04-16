@@ -23,7 +23,7 @@ requirements:
         score = 1 + 1
         prediction_file_status = "SCORED"
 
-        result = {'auc': submissionfile,
+        result = {'auc': args.submissionfile,
                   'submission_status': prediction_file_status}
         with open(args.results, 'w') as o:
           o.write(json.dumps(result))
