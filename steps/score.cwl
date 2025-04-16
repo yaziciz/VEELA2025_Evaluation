@@ -18,11 +18,14 @@ requirements:
         parser.add_argument("-r", "--results", required=True, help="Scoring results")
         parser.add_argument("-g", "--goldstandard", required=True, help="Goldstandard for scoring")
 
+        #get submissionId
+        parser.add_argument("-s", "--submissionId", required=True, help="Submission ID")
+
         args = parser.parse_args()
         score = 1 + 1
         prediction_file_status = "SCORED"
 
-        result = {'auc': score,
+        result = {'auc': submissionId,
                   'submission_status': prediction_file_status}
         with open(args.results, 'w') as o:
           o.write(json.dumps(result))

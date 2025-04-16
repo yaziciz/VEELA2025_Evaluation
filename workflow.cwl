@@ -91,7 +91,7 @@ steps:
         source: "#validate/invalid_reasons"
       # OPTIONAL: set `default` to `false` if email notification about valid submission is needed
       - id: errors_only
-        default: false
+        default: true
     out: [finished]
 
   annotate_validation_with_output:
