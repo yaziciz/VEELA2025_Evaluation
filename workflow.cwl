@@ -120,7 +120,7 @@ steps:
         source: "#email_validation/finished"
     out: [finished]
  
- score:
+  score:
     run: steps/score.cwl
     in:
       - id: input_file
