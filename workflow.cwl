@@ -120,3 +120,45 @@ steps:
         source: "#email_validation/finished"
     out: [finished]
  
+ score:
+    run: steps/score.cwl
+    in:
+      - id: input_file
+        source: "#download_submission/filepath"
+      - id: goldstandard
+        source: "#download_goldstandard/filepath"
+      - id: check_validation_finished 
+        source: "#check_status/finished"
+    out:
+      - id: results
+      
+  email_score:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/score_email.cwl
+    in:
+      - id: submissionid
+        source: "#submissionId"
+      - id: synapse_config
+        source: "#synapseConfig"
+      - id: results
+        source: "#score/results"
+      # OPTIONAL: add annotations to be withheld from participants to `[]`
+      # - id: private_annotations
+      #   default: []
+    out: []
+
+  annotate_submission_with_output:
+    run: https://raw.githubusercontent.com/Sage-Bionetworks/ChallengeWorkflowTemplates/v3.1/cwl/annotate_submission.cwl
+    in:
+      - id: submissionid
+        source: "#submissionId"
+      - id: annotation_values
+        source: "#score/results"
+      - id: to_public
+        default: true
+      - id: force
+        default: true
+      - id: synapse_config
+        source: "#synapseConfig"
+      - id: previous_annotation_finished
+        source: "#annotate_validation_with_output/finished"
+    out: [finished]
