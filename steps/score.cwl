@@ -17,15 +17,13 @@ requirements:
         parser.add_argument("-f", "--submissionfile", required=True, help="Submission File")
         parser.add_argument("-r", "--results", required=True, help="Scoring results")
         parser.add_argument("-g", "--goldstandard", required=True, help="Goldstandard for scoring")
-
-        #get submissionId
-        parser.add_argument("-s", "--submissionId", required=True, help="Submission ID")
+        parser.add_argument("-s", "--submissionid", required=True, help="Submission ID")
 
         args = parser.parse_args()
         score = 1 + 1
         prediction_file_status = "SCORED"
 
-        result = {'auc': submissionId,
+        result = {'auc': submissionid,
                   'submission_status': prediction_file_status}
         with open(args.results, 'w') as o:
           o.write(json.dumps(result))
@@ -37,6 +35,8 @@ inputs:
     type: File
   - id: check_validation_finished
     type: boolean?
+  - id: submissionid
+    type: int
 
 outputs:
   - id: results
@@ -59,6 +59,8 @@ arguments:
     valueFrom: $(inputs.goldstandard.path)
   - prefix: -r
     valueFrom: results.json
+  - prefix: -s
+    valueFrom: $(inputs.submissionid)
 
 hints:
   DockerRequirement:

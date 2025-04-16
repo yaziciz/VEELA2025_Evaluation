@@ -129,6 +129,8 @@ steps:
         source: "#download_goldstandard/filepath"
       - id: check_validation_finished 
         source: "#check_status/finished"
+      - id: submissionid
+        source: "#submissionId"
     out:
       - id: results
       
