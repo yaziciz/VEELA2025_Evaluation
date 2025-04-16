@@ -13,6 +13,7 @@ requirements:
         #!/usr/bin/env python
         import argparse
         import json
+        from synapseclient import Synapse as syn
         parser = argparse.ArgumentParser()
         parser.add_argument("-f", "--submissionfile", required=True, help="Submission File")
         parser.add_argument("-r", "--results", required=True, help="Scoring results")
@@ -22,6 +23,12 @@ requirements:
         args = parser.parse_args()
         score = 1 + 1
         prediction_file_status = "SCORED"
+        
+        syn = syn()
+        status = syn.getSubmissionStatus(args.submissionid)
+        status.score = score
+        status.status = 'SCORED'
+        status = syn.store(status)
 
         result = {'auc': args.submissionfile,
                   'submission_status': prediction_file_status}
