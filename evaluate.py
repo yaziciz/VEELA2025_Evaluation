@@ -1,14 +1,12 @@
-# %%
 from VEELA_Test_Metrics import metrics
 from evaluator import SynapseEvaluator, Task1Evaluator, Task2Evaluator
 import os
 from config import *
 
-# %%
 if __name__ == "__main__":
     # Synapse authentication
     synapse_evaluator = SynapseEvaluator(API_KEY)
-    #create a folder names submissions
+    # Create a folder for submissions
     os.makedirs("Submissions/" + str(SUBMISSION_ID), exist_ok=True)
 
     #Download the submission
