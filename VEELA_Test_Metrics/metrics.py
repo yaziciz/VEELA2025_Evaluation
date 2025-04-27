@@ -10,12 +10,8 @@ from sklearn.metrics import jaccard_score
 import surface_distance
 
 """
-
-Import these two volumes given below!
-
 GTVolume : Ground-Truth Volume as boolean
 MaskVolume : Predicted Volume as boolean
-
 """
 
 def compute_metrics(GTVolume, MaskVolume):
