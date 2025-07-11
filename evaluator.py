@@ -1,45 +1,41 @@
-from synapseclient import Synapse
+from VEELA_Test_Metrics import metrics
 import os
 import json
 import numpy as np
 from nibabel import load
-
-class SynapseEvaluator:
-    def __init__(self, auth_token):
-        self.synapse = Synapse()
-        self.synapse.login(authToken=auth_token)
-
-    def get_submission(self, submission_id):
-        return self.synapse.getSubmission(submission_id)
-
-    def update_submission_status(self, submission):
-        submission_status = self.synapse.getSubmissionStatus(submission)
-        submission_status.status = "SCORED"
-        self.synapse.store(submission_status)
-
+from config import NotificationType
 
 class TaskEvaluator:
-    def __init__(self, folder_path, metrics_module):
+    def __init__(self, folder_path, save_to_json=True):
         self.folder_path = folder_path
-        self.metrics = metrics_module
+        self.save_to_json = save_to_json
         self.samplewise_scores = []
 
     def evaluate(self):
         if not os.path.exists(self.folder_path):
-            print(f"Folder {self.folder_path} does not exist!")
-            return
+            if(not os.path.exists(self.folder_path.replace("Results/", "")) and not os.path.exists(self.folder_path.rpartition('/')[0])): # Check if the folder exists without "Results/"
+                return False, NotificationType.INFO_FAILURE_E1.format(folder_path=self.folder_path)
+            elif os.path.exists(self.folder_path.replace("Results/", "")):
+                self.folder_path = self.folder_path.replace("Results/", "") # If the folder exists without "Results/", update the path
+            elif os.path.exists(self.folder_path.rpartition('/')[0]): # If the folder exists without "Results/" and with a parent directory
+                self.folder_path = self.folder_path.rpartition('/')[0]
+            else:
+                return False, NotificationType.INFO_FAILURE_E1.format(folder_path=self.folder_path)
 
         nii_files = [file for file in os.listdir(self.folder_path) if file.endswith(".nii")]
         if len(nii_files) != 20:
             print(f"The number of test files in the folder is not 20!")
-            return
+            return False, NotificationType.INFO_FAILURE_E2
 
         for file in nii_files:
             file_path = os.path.join(self.folder_path, file)
-            self.process_file(file, file_path)
+            status, message = self.process_file(file, file_path)
+            if not status:
+                return False, message
 
         self.calculate_average_scores()
-        self.save_results()
+        results = self.get_results(save_to_json=self.save_to_json)
+        return results, ""
 
     def process_file(self, file, file_path):
         raise NotImplementedError("This method should be implemented by subclasses.")
@@ -47,7 +43,7 @@ class TaskEvaluator:
     def calculate_average_scores(self):
         raise NotImplementedError("This method should be implemented by subclasses.")
 
-    def save_results(self):
+    def get_results(self, save_to_json=True):
         output_path = os.path.join(self.folder_path, "evaluation.json")
         with open(output_path, "w") as f:
             json.dump(self.samplewise_scores, f, indent=4)
@@ -57,18 +53,24 @@ class Task1Evaluator(TaskEvaluator):
     def process_file(self, file, file_path):
         try:
             prediction_vol = load(file_path).get_fdata().astype(bool)
-            ground_truth_vol = load(file_path).get_fdata().astype(bool)
+            ground_truth_vol = load(os.path.join("./Test_GT", file_path.split('/')[-1].replace(".", "_gt."))).get_fdata().astype(bool)
         except Exception as e:
             print(f"Error loading file {file_path}: {e}")
-            return
+            return False, NotificationType.INFO_FAILURE_E3.format(file_path=file_path)
+        
+        if len(np.unique(prediction_vol)) != 2 or not np.array_equal(np.unique(prediction_vol), [0, 1]):
+            print(f"Prediction volume {file_path} does not have 2 labels (0 and 1).")
+            return False, NotificationType.INFO_FAILURE_E4.format(file_path=file_path)
 
-        cli_dice, iou, nsd = self.metrics.compute_metrics(prediction_vol, ground_truth_vol)
+        cli_dice, iou, nsd = metrics.compute_metrics(prediction_vol, ground_truth_vol)
         self.samplewise_scores.append({
             "sampleId": file,
             "clDice": cli_dice,
             "IoU": iou,
             "NSD": nsd
         })
+
+        return True, ""
 
     def calculate_average_scores(self):
         average_scores = {
@@ -83,19 +85,29 @@ class Task1Evaluator(TaskEvaluator):
             "NSD": average_scores["NSD"]
         })
 
+    def get_results(self, save_to_json=True):
+        super().get_results(save_to_json=save_to_json)
 
+        #get last element of samplewise_scores
+        last_score = self.samplewise_scores[-1]
+        return {"ID": "",
+                "Created By": "",
+                "clDice": last_score["clDice"],
+                "IoU": last_score["IoU"],
+                "NSD": last_score["NSD"]}
+    
 class Task2Evaluator(TaskEvaluator):
     def process_file(self, file, file_path):
         try:
             prediction_vol = load(file_path).get_fdata()
-            ground_truth_vol = load(file_path).get_fdata()
+            ground_truth_vol = load(os.path.join("./Test_GT", file_path.split('/')[-1].replace(".", "_gt."))).get_fdata()
         except Exception as e:
             print(f"Error loading file {file_path}: {e}")
-            return
+            return False, NotificationType.INFO_FAILURE_E3.format(file_path=file_path)
 
         if len(np.unique(prediction_vol)) != 3:
             print(f"Prediction volume {file_path} does not have 3 labels.")
-            return
+            return False, NotificationType.INFO_FAILURE_E5.format(file_path=file_path)
 
         prediction_vol_hepatic = np.where(prediction_vol == 1, 1, 0).astype(bool)
         ground_truth_vol_hepatic = np.where(ground_truth_vol == 1, 1, 0).astype(bool)
@@ -103,8 +115,8 @@ class Task2Evaluator(TaskEvaluator):
         prediction_vol_portal = np.where(prediction_vol == 2, 1, 0).astype(bool)
         ground_truth_vol_portal = np.where(ground_truth_vol == 2, 1, 0).astype(bool)
 
-        cli_dice_hepatic, iou_hepatic, nsd_hepatic = self.metrics.compute_metrics(prediction_vol_hepatic, ground_truth_vol_hepatic)
-        cli_dice_portal, iou_portal, nsd_portal = self.metrics.compute_metrics(prediction_vol_portal, ground_truth_vol_portal)
+        cli_dice_hepatic, iou_hepatic, nsd_hepatic = metrics.compute_metrics(prediction_vol_hepatic, ground_truth_vol_hepatic)
+        cli_dice_portal, iou_portal, nsd_portal = metrics.compute_metrics(prediction_vol_portal, ground_truth_vol_portal)
 
         self.samplewise_scores.append({
             "sampleId": file,
@@ -112,6 +124,8 @@ class Task2Evaluator(TaskEvaluator):
             "IoU": {"hepatic": iou_hepatic, "portal": iou_portal},
             "NSD": {"hepatic": nsd_hepatic, "portal": nsd_portal},
         })
+
+        return True, ""
 
     def calculate_average_scores(self):
         average_scores = {
@@ -134,3 +148,18 @@ class Task2Evaluator(TaskEvaluator):
             "IoU": average_scores["IoU"],
             "NSD": average_scores["NSD"]
         })
+
+    def get_results(self, save_to_json=True):
+        super().get_results(save_to_json=save_to_json)
+
+        last_score = self.samplewise_scores[-1]
+        return {
+            "ID": "",
+            "Created By": "",
+            "clDice_hepatic": last_score["clDice"]["hepatic"],
+            "clDice_portal": last_score["clDice"]["portal"],
+            "IoU_hepatic": last_score["IoU"]["hepatic"],
+            "IoU_portal": last_score["IoU"]["portal"],
+            "NSD_hepatic": last_score["NSD"]["hepatic"],
+            "NSD_portal": last_score["NSD"]["portal"]
+        }
