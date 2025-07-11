@@ -55,7 +55,7 @@ class TaskEvaluator:
 class Task1Evaluator(TaskEvaluator):
     def process_file(self, file, file_path):
         try:
-            prediction_vol = load(file_path).get_fdata().astype(bool)
+            prediction_vol = load(file_path).get_fdata().round().astype(int)
             ground_truth_vol = load(os.path.join("./Test_GT", file_path.split('/')[-1].replace(".", "_gt."))).get_fdata().astype(bool)
         except Exception as e:
             print(f"Error loading file {file_path}: {e}")
@@ -102,7 +102,7 @@ class Task1Evaluator(TaskEvaluator):
 class Task2Evaluator(TaskEvaluator):
     def process_file(self, file, file_path):
         try:
-            prediction_vol = load(file_path).get_fdata()
+            prediction_vol = load(file_path).get_fdata().round().astype(int)
             ground_truth_vol = load(os.path.join("./Test_GT", file_path.split('/')[-1].replace(".", "_gt."))).get_fdata()
         except Exception as e:
             print(f"Error loading file {file_path}: {e}")
