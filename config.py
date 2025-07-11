@@ -6,7 +6,7 @@ CHALLENGE_IDS = {"Segmentation": "9615787", "Classification": "9615788"}
 TABLE_ID_TASK1 = "syn68642629"
 TABLE_ID_TASK2 = "syn68642631"
 
-CHECK_INTERVAL = 6  # seconds
+CHECK_INTERVAL = 300  # seconds
 
 class NotificationType:
     INFO_SUCCESS_T1 = (
