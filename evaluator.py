@@ -6,29 +6,32 @@ from nibabel import load
 from config import NotificationType
 
 class TaskEvaluator:
-    def __init__(self, folder_path, save_to_json=True):
-        self.folder_path = folder_path
+    def __init__(self, folder_base, task_name, save_to_json=True):
+        self.folder_base = folder_base
+        self.task_name = task_name
         self.save_to_json = save_to_json
         self.samplewise_scores = []
 
     def evaluate(self):
-        if not os.path.exists(self.folder_path):
-            if(not os.path.exists(self.folder_path.replace("Results/", "")) and not os.path.exists(self.folder_path.rpartition('/')[0])): # Check if the folder exists without "Results/"
-                return False, NotificationType.INFO_FAILURE_E1.format(folder_path=self.folder_path)
-            elif os.path.exists(self.folder_path.replace("Results/", "")):
-                self.folder_path = self.folder_path.replace("Results/", "") # If the folder exists without "Results/", update the path
-            elif os.path.exists(self.folder_path.rpartition('/')[0]): # If the folder exists without "Results/" and with a parent directory
-                self.folder_path = self.folder_path.rpartition('/')[0]
-            else:
-                return False, NotificationType.INFO_FAILURE_E1.format(folder_path=self.folder_path)
 
-        nii_files = [file for file in os.listdir(self.folder_path) if file.endswith(".nii")]
+        for root, dirs, files in os.walk(self.folder_base):
+            dirs[:] = [d for d in dirs if not d.startswith('_')]  # skip dirs starting with "_"
+            
+            if self.task_name in dirs:
+                self.folder_path = os.path.join(root, self.task_name)
+                self.folder_base = self.folder_path
+                break
+
+        if not os.path.exists(self.folder_base) and not os.path.exists(os.path.join(self.folder_base, "Results", self.task_name)):
+            return False, NotificationType.INFO_FAILURE_E1.format(folder_path=os.path.join("Results", self.task_name))
+
+        nii_files = [file for file in os.listdir(self.folder_base) if file.endswith(".nii")]
         if len(nii_files) != 20:
             print(f"The number of test files in the folder is not 20!")
             return False, NotificationType.INFO_FAILURE_E2
 
         for file in nii_files:
-            file_path = os.path.join(self.folder_path, file)
+            file_path = os.path.join(self.folder_base, file)
             status, message = self.process_file(file, file_path)
             if not status:
                 return False, message
@@ -44,7 +47,7 @@ class TaskEvaluator:
         raise NotImplementedError("This method should be implemented by subclasses.")
 
     def get_results(self, save_to_json=True):
-        output_path = os.path.join(self.folder_path, "evaluation.json")
+        output_path = os.path.join(self.folder_base, "evaluation.json")
         with open(output_path, "w") as f:
             json.dump(self.samplewise_scores, f, indent=4)
 

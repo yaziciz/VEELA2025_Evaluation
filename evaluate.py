@@ -17,12 +17,14 @@ def run(synapse_interface, challenge_name, submission_id):
     os.system(f"unzip {submission_file_path} -d Submissions/" + str(submission_id))
     os.remove(submission_file_path)
 
+    folder_base = "./Submissions/"+str(submission_id)
+
     if(challenge_name == "Segmentation"):
         print("Evaluating Segmentation (Task 1) Challenge")
 
         # Task 1 evaluation
-        folder_task1 = "./Submissions/"+str(submission_id)+"/Results/Task01"
-        task1_evaluator = Task1Evaluator(folder_task1, save_to_json=False)
+        task_name = "Task01"
+        task1_evaluator = Task1Evaluator(folder_base, task_name, save_to_json=False)
         results, message = task1_evaluator.evaluate()
 
         if results:
@@ -40,9 +42,9 @@ def run(synapse_interface, challenge_name, submission_id):
         print("Evaluating Classification (Task 2) Challenge")
 
         # Task 2 evaluation
-        folder_task2 = "./Submissions/"+str(submission_id)+"/Results/Task02"
-        task2_evaluator = Task2Evaluator(folder_task2, save_to_json=False)
-        results = task2_evaluator.evaluate()
+        task_name = "Task02"
+        task2_evaluator = Task2Evaluator(folder_base, task_name, save_to_json=False)
+        results, message = task2_evaluator.evaluate()
 
         if results:
             #send the results to a table in Synapse
