@@ -6,7 +6,7 @@ CHALLENGE_IDS = {"Segmentation": "9615787", "Classification": "9615788"}
 TABLE_ID_TASK1 = "syn68642629"
 TABLE_ID_TASK2 = "syn68642631"
 
-CHECK_INTERVAL = 300  # seconds
+CHECK_INTERVAL = 3600  # seconds
 
 class NotificationType:
     INFO_SUCCESS_T1 = (
@@ -33,7 +33,7 @@ class NotificationType:
     INFO_FAILURE_E2 = (
         "The number of test files in the folder is not 20. All test cases should be submitted in the same folder, and the files should be named as 'case_1.nii', 'case_2.nii', ..., 'case_{expected_count}.nii'. For more information, please refer to the 'Submission Tutorial' section of the challenge page."
     )
-    INFO_FAILURE_E3 = "The file {file_path} could not be loaded. Please ensure that the file is in the correct format and contains valid data. For more information, please refer to the 'Submission Tutorial' section of the challenge page."
+    INFO_FAILURE_E3 = "The file {file_path} could not be loaded. Please ensure that the file is in the correct format, has the correct naming format, and contains valid data. For more information, please refer to the 'Submission Tutorial' section of the challenge page."
     INFO_FAILURE_E4 = "The prediction volume {file_path} does not have 2 labels (0 and 1). Please ensure that the prediction volume is a binary segmentation mask with only two labels: 0 for background and 1 for the object of interest. For more information, please refer to the 'Submission Tutorial' section of the challenge page."
     INFO_FAILURE_E5 = "The prediction volume {file_path} does not have 3 labels. Please ensure that the prediction volume is a multi-class segmentation mask with three labels: 0 for background, 1 for hepatic, and 2 for portal. For more information, please refer to the 'Submission Tutorial' section of the challenge page."
 
