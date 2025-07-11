@@ -55,5 +55,5 @@ class SynapseInterface:
         else:
             recipient = submission.teamId
 
-        self.synapse.sendMessage(userIds=[recipient], messageSubject=subject, messageBody=message)
+        #self.synapse.sendMessage(userIds=[recipient], messageSubject=subject, messageBody=message)
         print(f"Email sent to {recipient} for submission {submission.id}.")
