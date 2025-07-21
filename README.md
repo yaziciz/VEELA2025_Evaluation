@@ -25,4 +25,4 @@ https://metrics-reloaded.dkfz.de/metric?id=cl_dice
 - Boundary-based Metric: Normalized Surface Distance (NSD)
 https://metrics-reloaded.dkfz.de/metric?id=normalized_surface_distance
 
-This repository includes the evaluation scripts utilized in the challenge.
+This repository includes the evaluation scripts utilized in the [VEELA 2025 challenge](https://www.synapse.org/Synapse:syn65471967/wiki/).
